@@ -260,6 +260,10 @@ class List {
     const items = this._elements.wrapper.querySelectorAll(`.${this.CSS.item}`);
 
     for (let i = 0; i < items.length; i++) {
+      if (items[i].textContent === '') {
+        this._elements.wrapper.removeChild(items[i]); 
+      };
+      
       const value = items[i].innerHTML.replace('<br>', ' ').trim();
 
       if (value) {
