@@ -161,10 +161,8 @@ class List {
    */
   static get sanitize() {
     return {
-      style: {},
-      items: {
-        br: true,
-      }
+      a: { href: true },
+      br: true,
     };
   }
 
