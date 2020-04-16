@@ -93,6 +93,8 @@ class List {
       contentEditable: true
     });
 
+    this._elements.wrapper.addEventListener('paste', (e) => this.onPaste(e))
+
     // fill with data
     if (this._data.items.length) {
       this._data.items.forEach( item => {
@@ -206,9 +208,11 @@ class List {
    * @param {PasteEvent} event - event with pasted data
    */
   onPaste(event) {
-    const list = event.detail.data;
-
-    this.data = this.pasteHandler(list);
+    if(event.detail){
+      this.data = this.pasteHandler(event.detail.data);
+    }else{
+      this.pasteLinkHandler(event)
+    }
   }
 
   /**
@@ -392,6 +396,31 @@ class List {
     selection.addRange(range);
   }
 
+  pasteLinkHandler(event){
+    const text = event.clipboardData.getData('Text');
+    if (text.match(/^https?:\/\//)) {
+      // url was pasted, we handle this event completely
+      event.preventDefault();
+      event.stopPropagation();
+
+      const selectedHtml = () => {
+        const selection = document.getSelection()
+        if (!selection.rangeCount) {
+          return '';
+        }
+        const container = document.createElement('div');
+        for (let i = 0; i < selection.rangeCount; i++) {
+          container.appendChild(selection.getRangeAt(i).cloneContents());
+        }
+        return container.innerHTML;
+      }
+
+      const url = text;
+      const linktext = selectedHtml() || url;
+      const linktag = `<a href="${url}">${linktext}</a>`;
+      window.document.execCommand('insertHTML', false, linktag);
+    }
+  }
   /**
    * Handle UL, OL and LI tags paste and returns List data
    *
