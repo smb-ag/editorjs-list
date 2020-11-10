@@ -110,7 +110,11 @@ class List {
 
     // fill with data
     if (this._data.items.length) {
-      this._data.items.forEach((item) => {
+      this._data.items.forEach((item, idx) => {
+        if (this.mergePoint !== undefined && this.mergePoint === idx) {
+          this._elements.wrapper.appendChild(this._make('span', 'cdx-shadow-caret'));
+          this.mergePoint = undefined;
+        }
         this._elements.wrapper.appendChild(this._make('li', this.CSS.item, {
           innerHTML: item,
         }));
@@ -386,6 +390,18 @@ class List {
     }
 
     return this._data;
+  }
+
+  merge(data) {
+    this.mergePoint = this.data.items.length;
+
+    this.data = {
+      ...this.data,
+      items: [
+        ...this.data.items,
+        ...data.items,
+      ],
+    };
   }
 
   /**
