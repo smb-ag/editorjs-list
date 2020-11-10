@@ -95,6 +95,8 @@ class List {
     };
 
     this.data = data;
+
+    this.onPaste = this.onPaste.bind(this);
   }
 
   /**
@@ -132,6 +134,8 @@ class List {
         }
       }, false);
     }
+
+    this._elements.wrapper.addEventListener('paste', this.onPaste);
 
     return this._elements.wrapper;
   }
@@ -230,15 +234,56 @@ class List {
     return wrapper;
   }
 
+  handleConfiguredPaste(event) {
+    const list = event.detail.data;
+
+    this.data = this.pasteHandler(list);
+  }
+
+  handleDefaultPaste(event) {
+    const text = event.clipboardData.getData('Text');
+
+    if (text.match(/^https?:\/\//)) {
+      // url was pasted, we handle this event completely
+      event.preventDefault();
+      event.stopPropagation();
+
+      const selectedHtml = () => {
+        const selection = document.getSelection();
+
+        if (!selection.rangeCount) {
+          return '';
+        }
+
+        const container = document.createElement('div');
+
+        for (let i = 0; i < selection.rangeCount; i++) {
+          container.appendChild(selection.getRangeAt(i).cloneContents());
+        }
+
+        return container.innerHTML;
+      };
+
+      const url = text;
+      const linktext = selectedHtml() || url;
+      const linktag = `<a href="${url}" title="${url}">${linktext}</a>`;
+
+      window.document.execCommand('insertHTML', false, linktag);
+    }
+  }
+
   /**
    * On paste callback that is fired from Editor
    *
    * @param {PasteEvent} event - event with pasted data
    */
   onPaste(event) {
-    const list = event.detail.data;
-
-    this.data = this.pasteHandler(list);
+    // detail is given, so this is a editorjs configured paste event
+    if (event.detail) {
+      this.handleConfiguredPaste(event);
+    } else {
+      this.handleDefaultPaste(event);
+    }
   }
 
   /**
